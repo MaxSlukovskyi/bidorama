@@ -26,9 +26,6 @@ public class CategoryController {
         categoryDto.setName(name);
         categoryDto.setImage(image);
         CategoryResponseDto responseDto = categoryService.add(categoryDto);
-        if (responseDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 

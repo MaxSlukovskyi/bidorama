@@ -39,10 +39,7 @@ public class ProductController {
         productRequestDto.setStartBid(startBid);
         productRequestDto.setMinimalStep(minimalStep);
         ProductResponseDto productResponseDto = productService.add(productRequestDto);
-        if (productResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-        return new ResponseEntity<>(productResponseDto, HttpStatus.CREATED);
+        return new ResponseEntity<>(productResponseDto, HttpStatus.OK);
     }
 
     @PutMapping("update")
@@ -68,9 +65,6 @@ public class ProductController {
         productRequestDto.setStartBid(startBid);
         productRequestDto.setMinimalStep(minimalStep);
         ProductResponseDto productResponseDto = productService.update(productRequestDto);
-        if (productResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
         return new ResponseEntity<>(productResponseDto, HttpStatus.OK);
     }
 
@@ -103,7 +97,6 @@ public class ProductController {
         ProductResponseDto product = productService.getById(id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
-
 
     @DeleteMapping("{id}")
     public ResponseEntity<ProductResponseDto> delete(@PathVariable(value = "id") Long id) {

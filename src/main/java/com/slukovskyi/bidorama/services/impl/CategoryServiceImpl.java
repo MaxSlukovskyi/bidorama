@@ -26,6 +26,7 @@ public class CategoryServiceImpl implements CategoryService{
     private final CategoryResponseDtoMapper categoryResponseDtoMapper;
 
     @Override
+    @Deprecated
     public CategoryResponseDto add(CategoryDto categoryDto) throws IOException {
         Category category = new Category();
         category.setName(categoryDto.getName());

@@ -18,18 +18,12 @@ public class AuctionController {
     @PutMapping("register/{id}")
     public ResponseEntity<AuctionResponseDto> registerCurrentUser(@PathVariable(value = "id") Long id) {
         AuctionResponseDto auctionResponseDto = auctionService.registerCurrentUser(id);
-        if (auctionResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(auctionResponseDto, HttpStatus.OK);
     }
 
     @PutMapping("unregister/{id}")
     public ResponseEntity<AuctionResponseDto> unregisterCurrentUser(@PathVariable(value = "id") Long id) {
         AuctionResponseDto auctionResponseDto = auctionService.unregisterCurrentUser(id);
-        if (auctionResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(auctionResponseDto, HttpStatus.OK);
     }
 
@@ -37,9 +31,6 @@ public class AuctionController {
     public ResponseEntity<AuctionResponseDto> updateStatus(@RequestParam("id") Long id,
                                                            @RequestParam("status") AuctionStatus status) {
         AuctionResponseDto auctionResponseDto = auctionService.updateStatus(id, status);
-        if (auctionResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
         return new ResponseEntity<>(auctionResponseDto, HttpStatus.OK);
     }
 

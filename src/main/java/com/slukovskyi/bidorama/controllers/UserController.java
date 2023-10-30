@@ -19,9 +19,6 @@ public class UserController {
     @PutMapping("deposit")
     public ResponseEntity<UserResponseDto> deposit(@RequestParam("amount") Double amount) {
         UserResponseDto userResponseDto = userService.deposit(amount);
-        if (userResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
         return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
     }
 

@@ -1,7 +1,9 @@
 package com.slukovskyi.bidorama.services.impl;
 
+import com.slukovskyi.bidorama.dtos.AuctionResponseDto;
 import com.slukovskyi.bidorama.dtos.ProductRequestDto;
 import com.slukovskyi.bidorama.dtos.ProductResponseDto;
+import com.slukovskyi.bidorama.exceptions.NotFoundException;
 import com.slukovskyi.bidorama.mappers.ProductRequestDtoMapper;
 import com.slukovskyi.bidorama.mappers.ProductResponseDtoMapper;
 import com.slukovskyi.bidorama.models.Category;
@@ -45,7 +47,9 @@ public class ProductServiceImpl implements ProductService {
         User currentUser = userService.getCurrentUser();
         Product product = productRequestDtoMapper.productRequestDtoToProduct(productRequestDto);
 
-        Category category = categoryRepository.findById(productRequestDto.getCategoryId()).orElse(null);
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
+                .orElseThrow(() -> new NotFoundException(String.format("Category with id '%s' does not exist",
+                        productRequestDto.getCategoryId())));
         product.setCategory(category);
 
         product.setCreationTime(new Timestamp(System.currentTimeMillis()));
@@ -57,10 +61,10 @@ public class ProductServiceImpl implements ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        auctionService.createAuctionForProduct(savedProduct, productRequestDto);
-        savedProduct = productRepository.findById(savedProduct.getId()).orElse(null);
-
-        return productResponseDtoMapper.productToProductResponseDto(savedProduct, currentUser);
+        AuctionResponseDto savedAuction = auctionService.createAuctionForProduct(savedProduct, productRequestDto);
+        ProductResponseDto savedProductResponseDto = productResponseDtoMapper.productToProductResponseDto(savedProduct, currentUser);
+        savedProductResponseDto.setAuction(savedAuction);
+        return savedProductResponseDto;
     }
 
     private void saveProductImages(Product product, ProductRequestDto productRequestDto) throws IOException {
@@ -85,15 +89,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDto update(ProductRequestDto productRequestDto) throws IOException, ParseException {
         User currentUser = userService.getCurrentUser();
-        Product product = productRepository.findById(productRequestDto.getId()).orElse(null);
-
-        if (product == null) {
-            return null;
-        }
+        Product product = productRepository.findById(productRequestDto.getId())
+                .orElseThrow(() -> new NotFoundException(String.format("Product with id '%s' does not exist", productRequestDto.getId())));
 
         product.setName(productRequestDto.getName());
 
-        Category category = categoryRepository.findById(productRequestDto.getCategoryId()).orElse(null);
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
+                .orElseThrow(() -> new NotFoundException(String.format("Category with id '%s' does not exist",
+                        productRequestDto.getCategoryId())));
         product.setCategory(category);
 
         product.setDescription(productRequestDto.getDescription());
@@ -148,17 +151,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDto getById(Long id) {
         User currentUser = userService.getCurrentUser();
-        Product product = productRepository.findById(id).orElse(null);
-        if (product != null) {
-            return productResponseDtoMapper.productToProductResponseDto(product, currentUser);
-        }
-        return null;
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Product with id '%s' does not exist", id)));
+        return productResponseDtoMapper.productToProductResponseDto(product, currentUser);
     }
 
     @Override
     public void delete(Long id) {
-        Product product = productRepository.findById(id).orElse(null);
-        if (product != null && product.getAuction().getStatus().equals(AuctionStatus.CREATED)) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Product with id '%s' does not exist", id)));
+        if (product.getAuction().getStatus().equals(AuctionStatus.CREATED)) {
             productRepository.delete(product);
         }
     }

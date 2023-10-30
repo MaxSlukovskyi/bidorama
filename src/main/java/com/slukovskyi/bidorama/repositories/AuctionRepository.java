@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
     Optional<Auction> getByProduct_Id(Long id);
+
+    boolean existsByProduct_Id(Long id);
 }

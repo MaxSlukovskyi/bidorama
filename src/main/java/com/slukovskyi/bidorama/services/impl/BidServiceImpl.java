@@ -2,6 +2,9 @@ package com.slukovskyi.bidorama.services.impl;
 
 import com.slukovskyi.bidorama.dtos.BidRequestDto;
 import com.slukovskyi.bidorama.dtos.BidResponseDto;
+import com.slukovskyi.bidorama.exceptions.NotFoundException;
+import com.slukovskyi.bidorama.exceptions.NullReferenceException;
+import com.slukovskyi.bidorama.exceptions.UnableToBidException;
 import com.slukovskyi.bidorama.mappers.BidResponseDtoMapper;
 import com.slukovskyi.bidorama.models.Auction;
 import com.slukovskyi.bidorama.models.Bid;
@@ -27,12 +30,15 @@ public class BidServiceImpl implements BidService {
 
     @Override
     public BidResponseDto makeBid(BidRequestDto bidRequestDto) {
-        Auction auction = auctionRepository.findById(bidRequestDto.getAuctionId()).orElse(null);
+        Auction auction = auctionRepository.findById(bidRequestDto.getAuctionId())
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist",
+                        bidRequestDto.getAuctionId())));
+
         User currentUser = userService.getCurrentUser();
         BidResponseDto lastBid = this.getLastBidOfAuction(auction);
 
         if (!isPossibleToMakeBid(bidRequestDto, auction, lastBid, currentUser)) {
-            return null;
+            throw new UnableToBidException("User are not able to make a bid");
         }
 
         makeWithdrawal(bidRequestDto, lastBid);
@@ -51,7 +57,7 @@ public class BidServiceImpl implements BidService {
     @Override
     public BidResponseDto getLastBidOfAuction(Auction auction) {
         if (auction == null) {
-            return null;
+            throw new NullReferenceException("Attempt to use a null auction object");
         }
 
         Bid lastBid = auction.getBids()

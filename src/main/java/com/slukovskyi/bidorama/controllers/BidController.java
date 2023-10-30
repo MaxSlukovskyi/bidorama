@@ -21,10 +21,6 @@ public class BidController {
     @PutMapping("make")
     public ResponseEntity<BidResponseDto> makeBid(@RequestBody BidRequestDto bidRequestDto) {
         BidResponseDto bidResponseDto = bidService.makeBid(bidRequestDto);
-        if (bidResponseDto == null) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
         return new ResponseEntity<>(bidResponseDto, HttpStatus.OK);
     }
-
 }

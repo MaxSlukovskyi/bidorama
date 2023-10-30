@@ -20,21 +20,13 @@ public class AuthenticationController {
 
     @PostMapping("register")
     public ResponseEntity<?> register(@RequestBody UserRequestDto userRequestDto) {
-        UserResponseDto userResponseDto = userService.register(userRequestDto);
-        if (userResponseDto.getId() > 0) {
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        }
-        else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        userService.register(userRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto userRequestDto) {
         UserResponseDto responseUserDto = userService.login(userRequestDto);
-        if (responseUserDto == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
         return new ResponseEntity<>(responseUserDto, HttpStatus.OK);
     }
 }

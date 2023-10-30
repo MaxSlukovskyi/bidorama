@@ -3,6 +3,8 @@ package com.slukovskyi.bidorama.services.impl;
 import com.slukovskyi.bidorama.dtos.AuctionResponseDto;
 import com.slukovskyi.bidorama.dtos.BidResponseDto;
 import com.slukovskyi.bidorama.dtos.ProductRequestDto;
+import com.slukovskyi.bidorama.exceptions.AlreadyExistsException;
+import com.slukovskyi.bidorama.exceptions.NotFoundException;
 import com.slukovskyi.bidorama.mappers.AuctionResponseDtoMapper;
 import com.slukovskyi.bidorama.mappers.ProductRequestDtoMapper;
 import com.slukovskyi.bidorama.models.Auction;
@@ -39,11 +41,8 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto registerCurrentUser(Long id) {
         User currentUser = userService.getCurrentUser();
-        Auction auction = auctionRepository.findById(id).orElse(null);
-
-        if (auction == null) {
-            return null;
-        }
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist", id)));
 
         auction.getRegisteredUsers().add(currentUser);
         Auction savedAuction = auctionRepository.save(auction);
@@ -53,11 +52,8 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto unregisterCurrentUser(Long id) {
         User currentUser = userService.getCurrentUser();
-        Auction auction = auctionRepository.findById(id).orElse(null);
-
-        if (auction == null) {
-            return null;
-        }
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist", id)));
 
         auction.getRegisteredUsers().remove(currentUser);
         Auction savedAuction = auctionRepository.save(auction);
@@ -67,10 +63,8 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto updateStatus(Long id, AuctionStatus status) {
         User currentUser = userService.getCurrentUser();
-        Auction auction = auctionRepository.findById(id).orElse(null);
-        if (auction == null) {
-            return null;
-        }
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist", id)));
 
         AuctionStatus prevStatus = auction.getStatus();
 
@@ -102,21 +96,19 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto getById(Long id) {
         User currentUser = userService.getCurrentUser();
-        Auction auction = auctionRepository.findById(id).orElse(null);
-        if (auction != null) {
-            return auctionResponseDtoMapper.auctionToAuctionResponseDto(auction, currentUser);
-        }
-        return null;
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist", id)));
+
+        return auctionResponseDtoMapper.auctionToAuctionResponseDto(auction, currentUser);
     }
 
     @Override
     public AuctionResponseDto getByProductId(Long productId) {
-        Auction auction = auctionRepository.getByProduct_Id(productId).orElse(null);
-        if (auction != null) {
-            User currentUser = userService.getCurrentUser();
-            return auctionResponseDtoMapper.auctionToAuctionResponseDto(auction, currentUser);
-        }
-        return null;
+        Auction auction = auctionRepository.getByProduct_Id(productId)
+                .orElseThrow(() -> new NotFoundException(String.format("Auction for product with id '%s' does not exist", productId)));
+
+        User currentUser = userService.getCurrentUser();
+        return auctionResponseDtoMapper.auctionToAuctionResponseDto(auction, currentUser);
     }
 
     @Override
@@ -147,6 +139,10 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto createAuctionForProduct(Product savedProduct, ProductRequestDto productRequestDto) {
         User currentUser = userService.getCurrentUser();
+        if (auctionRepository.existsByProduct_Id(savedProduct.getId())) {
+            throw new AlreadyExistsException("Auction for that product already exists");
+        }
+
         Auction auction = productRequestDtoMapper.productRequestDtoToAuction(productRequestDto);
         auction.setStatus(AuctionStatus.CREATED);
         auction.setProduct(savedProduct);
@@ -158,16 +154,14 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public AuctionResponseDto updateAuctionForProduct(Product savedProduct, ProductRequestDto productRequestDto) {
         User currentUser = userService.getCurrentUser();
-        Auction auction = auctionRepository.findById(savedProduct.getAuction().getId()).orElse(null);
+        Auction auction = auctionRepository.findById(savedProduct.getAuction().getId())
+                .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist",
+                        savedProduct.getAuction().getId())));
 
-        if (auction != null) {
-            Auction updatedAuction = productRequestDtoMapper.updateAuctionFromProductRequestDto(auction, productRequestDto);
-            updatedAuction.setProduct(savedProduct);
-            Auction savedAuction = auctionRepository.save(updatedAuction);
-            return auctionResponseDtoMapper.auctionToAuctionResponseDto(savedAuction, currentUser);
-        }
-
-        return null;
+        Auction updatedAuction = productRequestDtoMapper.updateAuctionFromProductRequestDto(auction, productRequestDto);
+        updatedAuction.setProduct(savedProduct);
+        Auction savedAuction = auctionRepository.save(updatedAuction);
+        return auctionResponseDtoMapper.auctionToAuctionResponseDto(savedAuction, currentUser);
     }
 
 }

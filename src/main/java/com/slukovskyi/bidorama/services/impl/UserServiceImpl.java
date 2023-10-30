@@ -2,6 +2,9 @@ package com.slukovskyi.bidorama.services.impl;
 
 import com.slukovskyi.bidorama.dtos.UserRequestDto;
 import com.slukovskyi.bidorama.dtos.UserResponseDto;
+import com.slukovskyi.bidorama.exceptions.AlreadyExistsException;
+import com.slukovskyi.bidorama.exceptions.InsufficientFundsException;
+import com.slukovskyi.bidorama.exceptions.NotFoundException;
 import com.slukovskyi.bidorama.mappers.UserRequestDtoMapper;
 import com.slukovskyi.bidorama.mappers.UserResponseDtoMapper;
 import com.slukovskyi.bidorama.models.User;
@@ -31,6 +34,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto register(UserRequestDto userRequestDto) {
+        if (userRepository.existsByUsername(userRequestDto.getUsername())) {
+            throw new AlreadyExistsException(String.format("User with username '%s' already exists",
+                    userRequestDto.getUsername()));
+        }
+
         User user = userRequestDtoMapper.userRequestDtoToUser(userRequestDto);
 
         String hashPassword = passwordEncoder.encode(userRequestDto.getPassword());
@@ -55,11 +63,10 @@ public class UserServiceImpl implements UserService {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String loggedInUsername = userDetails.getUsername();
-        User user = userRepository.findByUsername(loggedInUsername).orElse(null);
 
-        if (user == null) {
-            return null;
-        }
+        User user = userRepository.findByUsername(loggedInUsername)
+                .orElseThrow(() -> new NotFoundException(String.format("User with username '%s' does not exist",
+                        userRequestDto.getUsername())));
 
         return userResponseDtoMapper.userToUserResponseDto(user);
     }
@@ -83,7 +90,7 @@ public class UserServiceImpl implements UserService {
         User user = this.getCurrentUser();
 
         if (user.getBalance() < amount) {
-            return null;
+            throw new InsufficientFundsException("User has insufficient funds to perform that action");
         }
 
         user.setBalance(user.getBalance() - amount);
