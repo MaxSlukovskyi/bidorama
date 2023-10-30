@@ -93,4 +93,15 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                         .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+        ErrorResponse errorResponse =
+                ErrorResponse.builder()
+                        .code(HttpStatus.BAD_REQUEST.name())
+                        .details(exception.getMessage())
+                        .time(LocalDateTime.now(ZoneOffset.UTC))
+                        .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

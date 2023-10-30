@@ -5,6 +5,7 @@ import com.slukovskyi.bidorama.dtos.UserResponseDto;
 import com.slukovskyi.bidorama.exceptions.AlreadyExistsException;
 import com.slukovskyi.bidorama.exceptions.InsufficientFundsException;
 import com.slukovskyi.bidorama.exceptions.NotFoundException;
+import com.slukovskyi.bidorama.exceptions.NullReferenceException;
 import com.slukovskyi.bidorama.mappers.UserRequestDtoMapper;
 import com.slukovskyi.bidorama.mappers.UserResponseDtoMapper;
 import com.slukovskyi.bidorama.models.User;
@@ -34,6 +35,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto register(UserRequestDto userRequestDto) {
+        if (userRequestDto == null) {
+            throw new NullReferenceException("Attempt to create a null user object");
+        }
+
         if (userRepository.existsByUsername(userRequestDto.getUsername())) {
             throw new AlreadyExistsException(String.format("User with username '%s' already exists",
                     userRequestDto.getUsername()));
@@ -52,7 +57,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto login(UserRequestDto userRequestDto) throws AuthenticationException{
+    public UserResponseDto login(UserRequestDto userRequestDto) throws AuthenticationException {
+        if (userRequestDto == null) {
+            throw new NullReferenceException("Attempt to use a null user object");
+        }
+
         String username = userRequestDto.getUsername();
         String password = userRequestDto.getPassword();
 
@@ -74,11 +83,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return userRepository.findByUsername(auth.getName()).orElse(null);
+        return userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
     }
 
     @Override
     public UserResponseDto deposit(Double amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("The amount must be non-negative");
+        }
+
         User user = this.getCurrentUser();
         user.setBalance(user.getBalance() + amount);
         User savedUser = userRepository.save(user);

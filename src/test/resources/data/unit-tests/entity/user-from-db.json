@@ -1,0 +1,8 @@
+{
+  "username": "john@doe.com",
+  "password": "testpass",
+  "name": "John",
+  "surname": "Doe",
+  "role": "USER",
+  "balance": 0.0
+}
