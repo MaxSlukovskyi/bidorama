@@ -30,6 +30,10 @@ public class BidServiceImpl implements BidService {
 
     @Override
     public BidResponseDto makeBid(BidRequestDto bidRequestDto) {
+        if (bidRequestDto == null) {
+            throw new NullReferenceException("Attempt to use a null bid object");
+        }
+
         Auction auction = auctionRepository.findById(bidRequestDto.getAuctionId())
                 .orElseThrow(() -> new NotFoundException(String.format("Auction with id '%s' does not exist",
                         bidRequestDto.getAuctionId())));
@@ -41,7 +45,7 @@ public class BidServiceImpl implements BidService {
             throw new UnableToBidException("User are not able to make a bid");
         }
 
-        makeWithdrawal(bidRequestDto, lastBid);
+        userService.withdraw(bidRequestDto.getSize());
 
         Bid bid = new Bid();
         bid.setAuction(auction);
@@ -71,19 +75,17 @@ public class BidServiceImpl implements BidService {
 
     @Override
     public boolean isPossibleToMakeBid(BidRequestDto bidRequestDto, Auction auction, BidResponseDto lastBid, User currentUser) {
-        return auction != null && (lastBid == null || (!(currentUser.getBalance() < bidRequestDto.getSize() - lastBid.getSize())
-                && !(bidRequestDto.getSize() - lastBid.getSize() < auction.getMinimalStep())))
-                && (lastBid != null || currentUser.getBalance() >= auction.getStartBid());
+        Double maxBid = this.getMaxBidByUserAndAuction(currentUser, auction);
+        return (lastBid == null && (currentUser.getBalance() >= auction.getStartBid()
+                && bidRequestDto.getSize() >= auction.getStartBid())) ||
+                (lastBid != null && (currentUser.getBalance() + maxBid >= bidRequestDto.getSize()) &&
+                        (bidRequestDto.getSize() - lastBid.getSize() >= auction.getMinimalStep()));
     }
 
     @Override
-    public void makeWithdrawal(BidRequestDto bidRequestDto, BidResponseDto lastBid) {
-        if (lastBid == null) {
-            userService.withdraw(bidRequestDto.getSize());
-        }
-        else {
-            userService.withdraw(bidRequestDto.getSize() - lastBid.getSize());
-        }
+    public Double getMaxBidByUserAndAuction(User user, Auction auction) {
+        Bid maxBid = auction.getBids().stream().filter(bid -> bid.getUser().getId().equals(user.getId()))
+                .max(Comparator.comparing(Bid::getSize)).orElse(null);
+        return maxBid != null ? maxBid.getSize() : 0.0;
     }
-
 }

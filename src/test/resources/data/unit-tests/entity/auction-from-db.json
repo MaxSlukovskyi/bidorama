@@ -1,0 +1,56 @@
+{
+  "id": 10,
+  "startTime": "2023-10-31T10:00:00.000Z",
+  "endTime": "2023-10-31T22:00:00.000Z",
+  "status": "ACTIVE",
+  "startBid": 100.0,
+  "minimalStep": 50.0,
+  "bids": [
+    {
+      "id": 1,
+      "user": {
+        "id": 100
+      },
+      "creationTime": "2023-10-31T12:10:15.000Z",
+      "size": 100.0
+    },
+    {
+      "id": 2,
+      "user": {
+        "id": 110
+      },
+      "creationTime": "2023-10-31T12:15:15.000Z",
+      "size": 150.0
+    },
+    {
+      "id": 3,
+      "user": {
+        "id": 115
+      },
+      "creationTime": "2023-10-31T12:18:10.000Z",
+      "size": 250.0
+    },
+    {
+      "id": 4,
+      "user": {
+        "id": 100
+      },
+      "creationTime": "2023-10-31T12:20:15.000Z",
+      "size": 300.0
+    }
+  ],
+  "registeredUsers": [
+    {
+      "id": 100
+    },
+    {
+      "id": 110
+    },
+    {
+      "id": 115
+    },
+    {
+      "id": 120
+    }
+  ]
+}

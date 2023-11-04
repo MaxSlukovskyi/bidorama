@@ -3,7 +3,6 @@ package com.slukovskyi.bidorama.services;
 import com.slukovskyi.bidorama.dtos.BidRequestDto;
 import com.slukovskyi.bidorama.dtos.BidResponseDto;
 import com.slukovskyi.bidorama.models.Auction;
-import com.slukovskyi.bidorama.models.Bid;
 import com.slukovskyi.bidorama.models.User;
 
 public interface BidService {
@@ -14,5 +13,5 @@ public interface BidService {
 
     boolean isPossibleToMakeBid(BidRequestDto bidRequestDto, Auction auction, BidResponseDto lastBid, User currentUser);
 
-    void makeWithdrawal(BidRequestDto bidRequestDto, BidResponseDto lastBid);
+    Double getMaxBidByUserAndAuction(User user, Auction auction);
 }
