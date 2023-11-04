@@ -362,4 +362,58 @@ public class UserServiceImplTest {
             }
         }
     }
+
+    @Nested
+    @DisplayName("#returnFunds tests")
+    class returnFundsTests {
+
+        @Value("classpath:data/unit-tests/entity/user-from-db.json")
+        private Resource userFromDBData;
+
+        @Value("classpath:data/unit-tests/dto/user-response-dto.json")
+        private Resource userResponseDtoData;
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException if amount is negative")
+        void shouldThrowExceptionIfAmountIsNegative() {
+            //Given
+            User user = ResourceDataReader.asObject(userFromDBData, User.class);
+            Double amount = -10.0;
+
+            //When - Then
+            assertThrows(IllegalArgumentException.class, () -> userService.returnFunds(user, amount));
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException if user does not exist")
+        void shouldThrowExceptionIfUserDoesNotExist() {
+            //Given
+            User user = ResourceDataReader.asObject(userFromDBData, User.class);
+            Double amount = 100.0;
+
+            when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
+
+            //When - Then
+            assertThrows(NotFoundException.class, () -> userService.returnFunds(user, amount));
+        }
+
+        @Test
+        @DisplayName("Should return funds and save user")
+        void shouldUpdateUser() {
+            //Given
+            User user = ResourceDataReader.asObject(userFromDBData, User.class);
+            Double amount = 100.0;
+            User updatedUser = ResourceDataReader.asObject(userFromDBData, User.class);
+            updatedUser.setBalance(updatedUser.getBalance() + amount);
+
+            when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+
+            //When
+            userService.returnFunds(user, amount);
+
+            //Then
+            verify(userRepository, times(1)).findByUsername(user.getUsername());
+            verify(userRepository, times(1)).save(updatedUser);
+        }
+    }
 }

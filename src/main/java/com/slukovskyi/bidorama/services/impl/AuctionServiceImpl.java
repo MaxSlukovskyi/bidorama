@@ -69,17 +69,7 @@ public class AuctionServiceImpl implements AuctionService {
         AuctionStatus prevStatus = auction.getStatus();
 
         if (prevStatus.equals(AuctionStatus.ACTIVE) && status.equals(AuctionStatus.WAITING)) {
-            Map<User, Bid> bidsToReturn = auction.getBids().stream()
-                    .collect(Collectors.toMap(Bid::getUser, Function.identity(),
-                            BinaryOperator.maxBy(Comparator.comparingDouble(Bid::getSize))));
-
-            for (Map.Entry<User, Bid> entry : bidsToReturn.entrySet()) {
-                User user = entry.getKey();
-                Bid bid = entry.getValue();
-                if (! user.getId().equals(bidService.getLastBidOfAuction(auction).getUser().getId())) {
-                    user.setBalance(user.getBalance() + bid.getSize());
-                }
-            }
+            this.returnFunds(auction);
         }
 
         if (prevStatus.equals(AuctionStatus.DELIVERING) && status.equals(AuctionStatus.FINISHED)) {
@@ -91,6 +81,20 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(status);
         Auction savedAuction = auctionRepository.save(auction);
         return auctionResponseDtoMapper.auctionToAuctionResponseDto(savedAuction, currentUser);
+    }
+
+    public void returnFunds(Auction auction) {
+        Map<User, Bid> bidsToReturn = auction.getBids().stream()
+                .collect(Collectors.toMap(Bid::getUser, Function.identity(),
+                        BinaryOperator.maxBy(Comparator.comparingDouble(Bid::getSize))));
+
+        for (Map.Entry<User, Bid> entry : bidsToReturn.entrySet()) {
+            User user = entry.getKey();
+            Bid bid = entry.getValue();
+            if (!user.getId().equals(bidService.getLastBidOfAuction(auction).getUser().getId())) {
+                userService.deposit(bid.getSize());
+            }
+        }
     }
 
     @Override

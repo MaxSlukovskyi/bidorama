@@ -112,4 +112,15 @@ public class UserServiceImpl implements UserService {
         return userResponseDtoMapper.userToUserResponseDto(savedUser);
     }
 
+    @Override
+    public void returnFunds(User user, Double amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("The amount must be non-negative");
+        }
+
+        User foundUser = userRepository.findByUsername(user.getUsername())
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
+        foundUser.setBalance(foundUser.getBalance() + amount);
+        userRepository.save(foundUser);
+    }
 }

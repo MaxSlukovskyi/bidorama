@@ -13,5 +13,7 @@ public interface UserService {
 
     UserResponseDto deposit(Double amount);
 
+    void returnFunds(User user, Double amount);
+
     UserResponseDto withdraw(Double amount);
 }
